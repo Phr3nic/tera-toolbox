@@ -2,9 +2,12 @@ const path = require("path");
 const { app, BrowserWindow, Tray, Menu, ipcMain, shell } = require("electron");
 const DataFolder = path.join(__dirname, "..", "data");
 const ModuleFolder = path.join(__dirname, "..", "mods");
+const ThemesFolder = path.join(__dirname, "..", "themes");
 
 // MUI
 const mui = require("tera-toolbox-mui").DefaultInstance;
+// Themes
+const themes = require("ttb-themes-management");
 
 function InitializeMUI(language) {
 	const { InitializeDefaultInstance } = require("tera-toolbox-mui");
@@ -188,10 +191,10 @@ process.on("SIGTERM", cleanExit);
 
 // IPC
 ipcMain.on("init", (event, _) => {
+	event.sender.send("set available themes", global.TeraProxy.GUIThemesList);
 	event.sender.send("set config", config);
 	event.sender.send("proxy running", false);
 	event.sender.send("is admin", global.TeraProxy.IsAdmin);
-
 	if (config.noselfupdate) {
 		console.warn(mui.get("loader-gui/warning-noselfupdate-1"));
 		console.warn(mui.get("loader-gui/warning-noselfupdate-2"));
@@ -299,6 +302,7 @@ class TeraProxyGUI {
 		config = LoadConfiguration();
 		InitializeMUI(config.uilanguage);
 
+		global.TeraProxy.GUIThemesList = themes.listThemes(ThemesFolder);
 		global.TeraProxy.GUIMode = true;
 		global.TeraProxy.DevMode = !!config.devmode;
 
@@ -341,7 +345,7 @@ class TeraProxyGUI {
 			show: false,
 			webPreferences: {
 				nodeIntegration: true,
-				devTools: false,
+				devTools: true,
 				spellcheck: false
 			}
 		});

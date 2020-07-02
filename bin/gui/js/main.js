@@ -2,7 +2,7 @@
 /* eslint-disable default-case */
 const { remote, ipcRenderer, shell } = require("electron");
 const { TeraToolboxMUI, LanguageNames } = require("tera-toolbox-mui");
-const Themes = ["black", "white", "pink", "classic-black", "classic-white", "classic-pink"];
+let Themes = {};
 
 let mui = null;
 
@@ -102,7 +102,7 @@ jQuery(($) => {
 		$("#noserverautojoin").prop("checked", Settings.noserverautojoin);
 		$("#minimizetotray").prop("checked", Settings.gui.minimizetotray);
 		
-		$("#theme").attr("href", `css/themes/${Settings.gui.theme}.css`);
+		$("#theme").attr("href", Themes[Settings.gui.theme].entryPoint);
 	}
 
 	function updateSettings(newSettings) {
@@ -132,11 +132,16 @@ jQuery(($) => {
 
 	function loadThemesNames() {
 		const ThemesSelector = $("#uithemes");
-		Themes.forEach(theme => ThemesSelector.append($("<option/>", { "value": theme, "text": theme })));
+		Object.keys(Themes).forEach(theme => ThemesSelector.append($("<option/>", { "value": theme, "text": theme })));
 	}
 
 	loadSettingsLanguageNames();
 	loadThemesNames();
+
+	ipcRenderer.on("set available themes", (_, obj) => {
+		Themes = obj;
+		loadThemesNames();
+	});
 
 	ipcRenderer.on("set config", (_, newConfig) => {
 		onSettingsChanged(newConfig);
